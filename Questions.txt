@@ -182,3 +182,8 @@ by ensuring everyone uses the same consistent images across different environmen
 The online repo serves 
 as a backup if local images are lost and integrates well with CI/CD pipelines for automated deployments. 
 Users don't need access to source code, Dockerfiles, or build tools to run the application.
+
+2-1 What are testcontainers?
+
+They simply are java libraries that allow you to run a bunch of docker containers while testing. 
+Here we use the postgresql container to attach to our application while testing
