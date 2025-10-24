@@ -31,11 +31,12 @@ Environment variables (POSTGRES_DB, POSTGRES_USER, POSTGRES_PASSWORD) are passed
 
 1-4 Why do we need a multistage build? And explain each step of this dockerfile.
 
-We need a multistage build to:
-- Reduce final image size by excluding build tools (JDK, Maven) from the runtime image
-- Separate build and runtime environments
-- Improve security by reducing attack surface (fewer tools in production)
-- Avoid requiring Maven and JDK on the host machine
+We need a multistage build to reduce the final image size and improve security. The first stage uses 
+a JDK image with Maven to compile the Java source code into a JAR file. The second stage uses only a 
+JRE image and copies the compiled JAR from the build stage, excluding all build tools and source code. 
+This results in a much smaller production image with fewer components, 
+reducing the attack surface and eliminating the need for Maven and JDK on the host machine.
+
 
 Dockerfile explanation:
 
@@ -64,3 +65,120 @@ ENTRYPOINT ["java", "-jar", "myapp.jar"]
   -> Defines the command to run when container starts
 
 Result: Final image contains only JRE + JAR file, reducing size from ~500MB to ~200MB.
+
+1-5 Why do we need a reverse proxy?
+
+A reverse proxy serves as a single entry point for client requests, providing multiple benefits for our 
+application architecture. It hides the backend infrastructure by exposing only port 80 to the public 
+while keeping the application server (port 8080) internal. This improves security, enables load balancing 
+across multiple backend instances, handles SSL/TLS encryption centrally, and can cache static content 
+for better performance. In our case, Apache httpd forwards all incoming requests to the Spring Boot API, 
+creating a clean separation between the web server layer and the application layer.
+
+┌─────────────────────────────────────────┐
+│   Client (navigateur/curl)              │
+└──────────────┬──────────────────────────┘
+               │ Port 80
+┌──────────────▼──────────────────────────┐
+│   httpd (Apache Reverse Proxy)          │
+│   - Reçoit les requêtes HTTP            │
+│   - Proxifie vers backend:8080          │
+└──────────────┬──────────────────────────┘
+               │ app-network
+┌──────────────▼──────────────────────────┐
+│   backend (Spring Boot + Java 21)       │
+│   - API REST                            │
+│   - Se connecte à la DB                 │
+└──────────────┬──────────────────────────┘
+               │ app-network
+┌──────────────▼──────────────────────────┐
+│   database (PostgreSQL 17)              │
+│   - Stocke les données                  │
+│   - Volume persistant                   │
+└─────────────────────────────────────────┘
+
+
+1-6 Why is docker-compose so important?
+
+Docker-compose is important because it enables the launching of multicontainers applications with only 1 
+command.
+
+1-7 Document docker-compose most important commands.
+
+- docker-compose up: Builds, creates, and starts all services defined in docker-compose.yml
+- docker-compose up -d: Starts services in detached mode (background)
+- docker-compose up --build: Forces rebuild of images before starting
+- docker-compose down: Stops and removes all containers, networks (but preserves volumes)
+
+
+1-8 Document your docker-compose file.
+
+The docker-compose.yml orchestrates a 3-tier application with the following services:
+
+backend-api (Spring Boot API):
+- Builds from ../Backend API folder
+- Loads environment variables from ../.env file
+- Overrides POSTGRES_HOST=database to use Docker service name
+- Connects to app-network for inter-container communication
+- Waits for database to be healthy before starting
+- Has healthcheck using curl on /actuator/health endpoint
+- Checks health every 10s with 30s grace period for startup
+
+database (PostgreSQL):
+- Builds from ../Database folder with initialization SQL scripts
+- Loads credentials from ../.env (POSTGRES_DB, POSTGRES_USER, POSTGRES_PASSWORD)
+- Connects to app-network
+- Uses postgres-data volume for data persistence
+- Has healthcheck using pg_isready command
+
+httpd (Apache Reverse Proxy):
+- Builds from ../Http server folder with reverse proxy configuration
+- Exposes port 80 to host (only public entry point)
+- Connects to app-network
+- Waits for backend-api to be healthy before starting
+- Proxies all requests to backend-api:8080
+
+Networks:
+- app-network: Isolated network enabling DNS-based service discovery
+
+Volumes:
+- postgres-data: Persistent storage for database files
+
+Startup order: database → backend-api → httpd (enforced by depends_on with healthcheck conditions)
+
+
+1-9 Document your publication commands and published images in dockerhub.
+
+Publication Commands:
+
+1. Login to Docker Hub:
+  -docker login
+  -(Enter username: gorgorq and password)
+
+2. Tag images with version 1.0:
+  -docker tag my-postgres-db gorgorq/my-database:1.0
+  -docker tag simple-api gorgorq/simple-api:1.0
+  -docker tag my-httpd gorgorq/my-httpd:1.0
+
+3. Push images to Docker Hub:
+  -docker push gorgorq/my-database:1.0
+  -docker push gorgorq/simple-api:1.0
+  -docker push gorgorq/my-httpd:1.0
+
+
+1-10 Why do we put our images into an online repo?
+
+
+We put our images on an online repo to enable anybody to download and use them without needing to build 
+them locally. 
+
+It enables easy deployment to production servers, cloud platforms, or any Docker host with 
+a simple docker pull command. We can maintain different versions of images with proper tagging (1.0, 1.1, 
+latest...) which allows version control and rollback capability. 
+
+It also facilitates team collaboration 
+by ensuring everyone uses the same consistent images across different environments. 
+
+The online repo serves 
+as a backup if local images are lost and integrates well with CI/CD pipelines for automated deployments. 
+Users don't need access to source code, Dockerfiles, or build tools to run the application.
