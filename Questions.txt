@@ -203,4 +203,15 @@ Without this dependency, images could be built and pushed even if the code has f
 errors, potentially deploying broken code to production. This creates a safety gate: if mvn clean verify 
 fails, the entire workflow stops and no images are published, maintaining code quality standards.
 
-MAIN BRANCH PIPELINE TEST
+
+2-4 For what purpose do we need to push docker images?
+
+We need to push Docker images to Docker Hub to make them accessible for deployment across different 
+environments and teams. Pushing images enables easy deployment to production servers, staging environments, 
+or any Docker host with a simple docker pull command without needing to rebuild. It provides version 
+control through tags (latest, 1.0, 1.1...) allowing rollback to previous versions if needed. The registry 
+serves as a centralized storage and backup for images, ensuring they're available even if local copies 
+are lost. It facilitates team collaboration by ensuring everyone uses the same tested and validated images. 
+Most importantly, it's essential for CI/CD pipelines where automated deployments fetch the latest tested 
+images from the registry. Users can run the application without access to source code, Dockerfiles, or 
+build tools, they only need docker pull and docker run commands.
