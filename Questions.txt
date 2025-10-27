@@ -202,3 +202,5 @@ The needs: test-backend directive ensures that docker images are only built if t
 Without this dependency, images could be built and pushed even if the code has failing tests or compilation 
 errors, potentially deploying broken code to production. This creates a safety gate: if mvn clean verify 
 fails, the entire workflow stops and no images are published, maintaining code quality standards.
+
+DEVELOP BRANCH PIPELINE TEST
