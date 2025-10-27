@@ -3,9 +3,9 @@
   become: true
 
   vars:
-    postgres_db: db
-    postgres_user: usr
-    postgres_password: pwd
+    postgres_db: "{{ vault_postgres_db }}"
+    postgres_user: "{{ vault_postgres_user }}"
+    postgres_password: "{{ vault_postgres_password }}"
 
   roles:
     - docker
