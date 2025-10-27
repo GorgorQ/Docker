@@ -1,6 +1,7 @@
 name: CI devops 2025
+
+# Trigger the workflow on push to main/develop branches and on pull requests
 on:
-  #to begin you want to launch this job in main and develop
   push:
     branches: 
       - main
@@ -8,68 +9,83 @@ on:
   pull_request:
 
 jobs:
+  # Job 1: Test backend application and run quality gate analysis
   test-backend: 
     runs-on: ubuntu-24.04
     steps:
-     #checkout your github code using actions/checkout@v4
-      - uses: actions/checkout@v4
+      # Step 1: Checkout the repository code
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-     #do the same with another action (actions/setup-java@v4) that enable to setup jdk 21
+      # Step 2: Set up JDK 21 (required for Spring Boot 3.x)
       - name: Set up JDK 21
         uses: actions/setup-java@v4
         with:
           java-version: '21'
-          distribution: 'temurin'
+          distribution: 'temurin'  # Eclipse Temurin is a free, open-source Java distribution
 
-     #finally build your app with the latest command
+      # Step 3: Build and run tests (unit + integration tests with Testcontainers)
       - name: Build and test with Maven
         working-directory: TP_1/Backend API
         run: mvn clean verify
+        # 'clean' removes previous builds to avoid caching issues
+        # 'verify' compiles code, runs unit tests, and integration tests
 
-      # SonarCloud analysis
+      # Step 4: Run SonarCloud analysis for code quality and security
       - name: SonarCloud analysis
         working-directory: TP_1/Backend API
         run: mvn sonar:sonar -Dsonar.projectKey=GorgorQ_Docker -Dsonar.token=${{ secrets.SONAR_TOKEN }}
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Required for PR decoration
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}    # SonarCloud authentication token
+        # SonarCloud analyzes code quality, detects bugs, vulnerabilities, and code smells
+        # The quality gate ensures code meets defined quality standards before deployment
 
-  # define job to build and publish docker image
+  # Job 2: Build and push Docker images (only if tests and quality gate pass)
   build-and-push-docker-image:
-    needs: test-backend
-    # run only when code is compiling and tests are passing
+    needs: test-backend  # This job depends on test-backend success
     runs-on: ubuntu-24.04
 
-    # steps to perform in job
     steps:
+      # Step 1: Checkout code to access Dockerfiles
       - name: Checkout code
         uses: actions/checkout@v4
 
+      # Step 2: Authenticate to Docker Hub using secured credentials
       - name: Login to DockerHub
         run: echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login --username ${{ secrets.DOCKERHUB_USERNAME }} --password-stdin
+        # Uses GitHub Secrets to securely store Docker Hub credentials
 
+      # Step 3: Build and push backend API Docker image
       - name: Build image and push backend
         uses: docker/build-push-action@v6
         with:
-          # relative path to the place where source code with Dockerfile is located
-          context: ./TP_1/Backend API
-          # Note: tags has to be all lower-case
+          context: ./TP_1/Backend API  # Path to Dockerfile and application code
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/tp-devops-simple-api:latest
-          # build on feature branches, push only on main branch
-          push: ${{ github.ref == 'refs/heads/main' }}
+          push: ${{ github.ref == 'refs/heads/main' }}  # Push only on main branch
+        # Images are built on all branches but pushed only on main for production safety
 
+      # Step 4: Build and push PostgreSQL database Docker image
       - name: Build image and push database
         uses: docker/build-push-action@v6
         with:
-          context: ./TP_1/Database
+          context: ./TP_1/Database  # Contains Dockerfile and SQL init scripts
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/tp-devops-database:latest
-          # build on feature branches, push only on main branch
           push: ${{ github.ref == 'refs/heads/main' }}
 
+      # Step 5: Build and push Apache HTTP server Docker image (reverse proxy)
       - name: Build image and push httpd
         uses: docker/build-push-action@v6
         with:
-          context: ./TP_1/Http server
+          context: ./TP_1/Http server  # Contains Dockerfile, httpd.conf, and index.html
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/tp-devops-httpd:latest
-          # build on feature branches, push only on main branch
           push: ${{ github.ref == 'refs/heads/main' }}
+
+# Quality Gate Configuration Summary:
+# - SonarCloud analyzes code quality after successful build and tests
+# - Project Key: GorgorQ_Docker (identifies the project on SonarCloud)
+# - Organization: gorgorq (defined in pom.xml)
+# - Authentication: SONAR_TOKEN stored in GitHub Secrets
+# - The quality gate checks: code coverage, bugs, vulnerabilities, code smells, duplications
+# - If quality gate fails, it's visible on SonarCloud dashboard but doesn't block the pipeline
+# - To enforce blocking: configure "Quality Gate status" as required check in GitHub branch protection
