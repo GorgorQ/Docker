@@ -1,0 +1,64 @@
+name: Test Backend
+
+# Trigger on push to develop and main branches, and on pull requests
+on:
+  push:
+    branches:
+      - main
+      - develop
+  pull_request:
+
+jobs:
+  # Job 1: Test backend application
+  test-backend:
+    runs-on: ubuntu-24.04
+    steps:
+      # Step 1: Checkout the repository code
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # Step 2: Set up JDK 21 (required for Spring Boot 3.x)
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+
+      # Step 3: Build and run tests (unit + integration tests with Testcontainers)
+      - name: Build and test with Maven
+        working-directory: TP_1/Backend API
+        run: mvn clean verify
+        # 'clean' removes previous builds to avoid caching issues
+        # 'verify' compiles code, runs unit tests, and integration tests
+
+  # Job 2: Run SonarCloud quality gate analysis (only if tests pass)
+  sonarcloud-analysis:
+    needs: test-backend  # This job depends on test-backend success
+    runs-on: ubuntu-24.04
+    steps:
+      # Step 1: Checkout the repository code
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # Step 2: Set up JDK 21
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+
+      # Step 3: Build project (required for SonarCloud analysis)
+      - name: Build with Maven
+        working-directory: TP_1/Backend API
+        run: mvn clean install -DskipTests
+        # Build without running tests again (already done in previous job)
+
+      # Step 4: Run SonarCloud analysis for code quality and security
+      - name: SonarCloud analysis
+        working-directory: TP_1/Backend API
+        run: mvn sonar:sonar -Dsonar.projectKey=GorgorQ_Docker -Dsonar.token=${{ secrets.SONAR_TOKEN }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Required for PR decoration
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}    # SonarCloud authentication token
+        # SonarCloud analyzes code quality, detects bugs, vulnerabilities, and code smells
+        # The quality gate ensures code meets defined quality standards before deployment
