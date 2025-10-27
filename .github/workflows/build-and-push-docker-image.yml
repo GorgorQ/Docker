@@ -3,7 +3,7 @@ name: Build and Push Docker Images
 # Trigger only when test workflow completes successfully on main branch
 on:
   workflow_run:
-    workflows: ["Test Backend"]  # Name of the test workflow
+    workflows: ["Test Backend"]  
     types:
       - completed
     branches:
