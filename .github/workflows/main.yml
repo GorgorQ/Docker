@@ -4,7 +4,7 @@ on:
   push:
     branches: 
       - main
-      - TP-2
+      - develop
   pull_request:
 
 jobs:
