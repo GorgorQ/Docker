@@ -215,3 +215,53 @@ are lost. It facilitates team collaboration by ensuring everyone uses the same t
 Most importantly, it's essential for CI/CD pipelines where automated deployments fetch the latest tested 
 images from the registry. Users can run the application without access to source code, Dockerfiles, or 
 build tools, they only need docker pull and docker run commands.
+
+
+3-1 Document your inventory and base commands
+
+Inventory Structure (inventories/setup.yml):
+The inventory file defines target servers and connection parameters using YAML format. It contains 'all' 
+group with common variables (ansible_user: admin, ansible_ssh_private_key_file: ~/.ssh/id_rsa) and 'prod' 
+group listing alexandre.kalaydjian.takima.cloud as the production host. Groups enable targeted deployments 
+and environment separation.
+
+Base Commands:
+- ansible all -i inventories/setup.yml -m ping: Tests SSH connectivity
+- ansible all -i inventories/setup.yml -m setup: Gathers system information
+- ansible all -i inventories/setup.yml -m command -a "uptime": Executes shell commands
+- ansible all -i inventories/setup.yml -m apt -a "name=docker.io state=present" --become: Installs packages
+- ansible-playbook -i inventories/setup.yml playbook.yml: Runs automated playbooks
+
+Creating ansible.cfg with "inventory = inventories/setup.yml" simplifies commands by removing the -i flag. 
+Ansible connects via SSH using the private key, executes commands remotely through Python, and requires 
+no installation on target servers.
+
+3-2 Document your playbook
+
+The playbook orchestrates Docker installation on production servers through a role-based architecture:
+
+```yaml
+- hosts: all
+  gather_facts: true
+  become: true
+  roles:
+    - docker
+```
+
+- hosts: all - Targets all hosts defined in inventories/setup.yml (alexandre.kalaydjian.takima.cloud)
+- gather_facts: true - Collects system information (OS version, architecture, Python path) used by tasks 
+  for intelligent decisions like detecting ansible_facts['distribution_release'] for Debian version
+- become: true - Executes all tasks with sudo privileges, required for system-level operations
+- roles: - docker - Calls the docker role containing modular tasks in roles/docker/tasks/main.yml
+
+The docker role installs prerequisites (apt-transport-https, curl, gnupg), adds Docker's GPG key and 
+repository, installs Docker CE, sets up Python3 with Docker SDK in a virtual environment at /opt/docker_venv, 
+and ensures the Docker service is running and enabled at boot. Handlers in roles/docker/handlers/main.yml 
+respond to configuration changes by restarting Docker when notified. This role-based structure keeps the 
+main playbook concise (5 lines) while maintaining detailed installation logic separately for reusability 
+across projects, following Ansible best practices for Infrastructure as Code with version-controlled, 
+repeatable, and testable deployments.
+
+Execution: ansible-playbook -i inventories/setup.yml playbook.yml
+Verification: ansible all -i inventories/setup.yml -m command -a "docker --version"
+

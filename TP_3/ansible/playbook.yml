@@ -1,0 +1,15 @@
+- hosts: all
+  gather_facts: true
+  become: true
+
+  vars:
+    postgres_db: db
+    postgres_user: usr
+    postgres_password: pwd
+
+  roles:
+    - docker
+    - network
+    - database
+    - app
+    - proxy

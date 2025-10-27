@@ -1,0 +1,12 @@
+---
+# tasks file for roles/proxy
+- name: Run HTTPD reverse proxy
+  community.docker.docker_container:
+    name: httpd
+    image: gorgorq/my-httpd:1.0
+    state: started
+    restart_policy: unless-stopped
+    networks:
+      - name: app-network
+    ports:
+      - "80:80"
