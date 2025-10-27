@@ -1,20 +1,28 @@
 ---
+- name: Copy .env file to server
+  copy:
+    src: .env
+    dest: /home/admin/.env
+    mode: '0600'
+
+- name: Create Docker volume for PostgreSQL
+  community.docker.docker_volume:
+    name: postgres-data
+    state: present
+
 - name: Run PostgreSQL database
   community.docker.docker_container:
     name: database
     image: gorgorq/my-database:1.0
     state: started
+    recreate: yes
     restart_policy: unless-stopped
     networks:
-      - name: app-network
+      - name: internal-network
     env:
-      POSTGRES_DB: "{{ postgres_db }}"
-      POSTGRES_USER: "{{ postgres_user }}"
-      POSTGRES_PASSWORD: "{{ postgres_password }}"
+      POSTGRES_DB: "{{ vault_postgres_db }}"
+      POSTGRES_USER: "{{ vault_postgres_user }}"
+      POSTGRES_PASSWORD: "{{ vault_postgres_password }}"
     volumes:
       - postgres-data:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U {{ postgres_user }}"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
+

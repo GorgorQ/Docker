@@ -1,4 +1,11 @@
-- name: Create Docker network
+---
+- name: Create internal network for database-app communication
+  community.docker.docker_network:
+    name: internal-network
+    state: present
+
+- name: Create app network for app-proxy communication
   community.docker.docker_network:
     name: app-network
     state: present
+
