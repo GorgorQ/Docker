@@ -182,3 +182,23 @@ by ensuring everyone uses the same consistent images across different environmen
 The online repo serves 
 as a backup if local images are lost and integrates well with CI/CD pipelines for automated deployments. 
 Users don't need access to source code, Dockerfiles, or build tools to run the application.
+
+2-1 What are testcontainers?
+
+They simply are java libraries that allow you to run a bunch of docker containers while testing. 
+Here we use the postgresql container to attach to our application while testing
+
+
+
+2-2 For what purpose do we need to use secured variables ?
+
+We need secured variables (GitHub Secrets) to protect sensitive credentials like Docker Hub username and 
+tokens. Publishing credentials directly in code or configuration files would expose them to anyone with 
+repository access, creating major security risks.
+
+2-3 Why did we put needs: build-and-test-backend on this job? Maybe try without this and you will see!
+
+The needs: test-backend directive ensures that docker images are only built if the tests pass successfully. 
+Without this dependency, images could be built and pushed even if the code has failing tests or compilation 
+errors, potentially deploying broken code to production. This creates a safety gate: if mvn clean verify 
+fails, the entire workflow stops and no images are published, maintaining code quality standards.
