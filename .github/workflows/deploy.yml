@@ -70,18 +70,6 @@ jobs:
         with:
           ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
 
-      - name: Add known_hosts (from secret or ssh-keyscan)
-        run: |
-          mkdir -p ~/.ssh
-          if [ -n "${{ secrets.KNOWN_HOSTS }}" ]; then
-            echo "${{ secrets.KNOWN_HOSTS }}" > ~/.ssh/known_hosts
-            echo "Known hosts added from secret"
-          else
-            echo "KNOWN_HOSTS secret empty — attempting ssh-keyscan (may fail on private DNS)"
-            ssh-keyscan -H "${{ secrets.DEPLOY_HOST }}" >> ~/.ssh/known_hosts || true
-          fi
-          chmod 644 ~/.ssh/known_hosts
-
       - name: Install Ansible and dependencies
         run: |
           sudo apt-get update -y
