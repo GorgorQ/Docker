@@ -11,6 +11,7 @@
     state: started
     recreate: yes
     restart_policy: no
+    pull: true  
     networks:
       - name: proxy-network
     ports:
