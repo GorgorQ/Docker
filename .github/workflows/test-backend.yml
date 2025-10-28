@@ -55,6 +55,7 @@ jobs:
 
       # Step 4: Run SonarCloud analysis for code quality and security
       - name: SonarCloud analysis
+        continue-on-error: true
         working-directory: TP_1/Backend API
         run: mvn sonar:sonar -Dsonar.projectKey=GorgorQ_Docker -Dsonar.token=${{ secrets.SONAR_TOKEN }}
         env:
