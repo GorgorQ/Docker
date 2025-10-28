@@ -25,7 +25,7 @@ jobs:
      #finally build your app with the latest command
       - name: Build and test with Maven
         run: |
-          cd TP_1/Backend API  # Correct path to backend code
+          cd "TP_1/Backend API"  # Correct path to backend code
           chmod +x mvnw
           ./mvnw clean verify
 
@@ -34,7 +34,7 @@ jobs:
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         run: |
-          cd TP_1/Backend API  # Correct path to backend code
+          cd "TP_1/Backend API"  # Correct path to backend code
           ./mvnw -B verify sonar:sonar \
             -Dsonar.projectKey=tp-docker_project-tp-docker \
             -Dsonar.organization=tp-docker \
@@ -60,7 +60,7 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           # relative path to the place where source code with Dockerfile is located
-          context: ./TP_1/Backend API  # Correct path to backend code
+          context: ./TP_1/"Backend API"  # Correct path to backend code
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/tp-devops-simple-api:latest
           # build on feature branches, push only on main branch
           push: ${{ github.ref == 'refs/heads/main' }}
@@ -76,7 +76,7 @@ jobs:
       - name: Build image and push httpd
         uses: docker/build-push-action@v6
         with:
-          context: ./TP_1/Http server  # Correct path to httpd code
+          context: ./TP_1/"Http server"  # Correct path to httpd code
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/tp-devops-httpd:latest
           # build on feature branches, push only on main branch
           push: ${{ github.ref == 'refs/heads/main' }}
