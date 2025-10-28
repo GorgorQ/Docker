@@ -4,6 +4,14 @@
     path: /opt/frontend
     mode: '0755'
 
+- name: Build frontend Docker image
+  community.docker.docker_image:
+    build:
+      path: ../../../front-end
+    name: "{{ httpd_image_name | default('gorgorq/my-httpd') }}"
+    tag: "{{ httpd_image_tag | default('1.0') }}"
+    source: build
+
 - name: Run HTTPD reverse proxy
   community.docker.docker_container:
     name: httpd
@@ -11,7 +19,7 @@
     state: started
     recreate: yes
     restart_policy: no
-    pull: true  
+    pull: false  
     networks:
       - name: proxy-network
     ports:
