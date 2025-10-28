@@ -37,7 +37,6 @@ jobs:
         with:
           node-version: '18'
           cache: 'npm'
-          cache-dependency-path: front-end/package-lock.json
 
       - name: Login to DockerHub
         run: echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login --username ${{ secrets.DOCKERHUB_USERNAME }} --password-stdin
