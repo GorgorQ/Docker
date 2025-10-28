@@ -26,8 +26,7 @@ jobs:
       - name: Build and test with Maven
         run: |
           cd "TP_1/Backend API"  # Correct path to backend code
-          chmod +x mvnw
-          ./mvnw clean verify
+          mvn clean verify
 
       # Run SonarCloud analysis
       - name: Analyze with SonarCloud
@@ -35,7 +34,7 @@ jobs:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         run: |
           cd "TP_1/Backend API"  # Correct path to backend code
-          ./mvnw -B verify sonar:sonar \
+          mvn -B verify sonar:sonar \
             -Dsonar.projectKey=tp-docker_project-tp-docker \
             -Dsonar.organization=tp-docker \
             -Dsonar.host.url=https://sonarcloud.io \
