@@ -11,4 +11,4 @@
       - "80:80"
     env:
       BACKEND_API_HOST: "{{ backend_api_host }}"
-      BACKEND_API_PORT: "{{ backend_api_port }}"
+      BACKEND_API_PORT: "{{ backend_api_port | string }}"
