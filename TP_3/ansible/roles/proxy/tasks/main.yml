@@ -2,7 +2,7 @@
 - name: Run HTTPD reverse proxy
   community.docker.docker_container:
     name: httpd
-    image: gorgorq/my-httpd:1.0
+    image: "{{ httpd_image_name | default('gorgorq/my-httpd') }}:{{ httpd_image_tag | default('1.0') }}"
     state: started
     restart_policy: no
     networks:

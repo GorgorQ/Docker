@@ -7,7 +7,7 @@
 - name: Run PostgreSQL database
   community.docker.docker_container:
     name: database
-    image: gorgorq/my-database:1.0
+    image: "{{ db_image_name | default('gorgorq/my-database') }}:{{ db_image_tag | default('1.0') }}"
     state: started
     recreate: yes
     restart_policy: unless-stopped
