@@ -4,7 +4,7 @@
     name: httpd
     image: gorgorq/my-httpd:1.0
     state: started
-    restart_policy: never
+    restart_policy: no
     networks:
       - name: app-network
     ports:

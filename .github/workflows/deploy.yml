@@ -1,0 +1,36 @@
+name: Build and Deploy
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H "${{ secrets.DEPLOY_HOST }}" >> ~/.ssh/known_hosts
+
+      - name: Install Ansible
+        run: |
+          sudo apt-get update -y
+          sudo apt-get install -y python3-venv python3-pip
+          python3 -m pip install --upgrade pip
+          pip install "ansible>=8.0"
+          ansible-galaxy collection install community.docker
+
+      - name: Create vault password file
+        run: |
+          echo "${{ secrets.ANSIBLE_VAULT_PASSWORD }}" > .vault_pass
+          chmod 600 .vault_pass
+
+      - name: Run Ansible playbook
+        run: |
+          ansible-playbook -i ansible/inventories/setup.yml ansible/playbook.yml --vault-password-file .vault_pass -e "image_tag=${{ github.ref_name || 'latest' }}"

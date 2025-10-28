@@ -3,6 +3,8 @@
   become: true
 
   vars:
+    backend_api_host: "{{ vault_backend_api_host }}"
+    backend_api_port: "{{ vault_backend_api_port }}"
     postgres_db: "{{ vault_postgres_db }}"
     postgres_user: "{{ vault_postgres_user }}"
     postgres_password: "{{ vault_postgres_password }}"

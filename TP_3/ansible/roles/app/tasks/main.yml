@@ -2,15 +2,18 @@
 - name: Run Backend API
   community.docker.docker_container:
     name: backend-api
-    image: gorgorq/simple-api:1.0
-    restart_policy: on-failure:3
+    image: "{{ image_name | default('gorgorq/simple-api') }}:{{ image_tag | default('1.0') }}"
+    state: started
+    recreate: yes
+    restart_policy: on-failure
+    restart_retries: 3
     networks:
       - name: internal-network
       - name: app-network
     env:
-      POSTGRES_HOST: database
-      POSTGRES_PORT: "5432"
+      POSTGRES_HOST: "{{ backend_api_host }}"
+      POSTGRES_PORT: "{{ backend_api_port }}"
       POSTGRES_DB: "{{ postgres_db }}"
       POSTGRES_USER: "{{ postgres_user }}"
       POSTGRES_PASSWORD: "{{ postgres_password }}"
-  
+
