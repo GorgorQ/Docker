@@ -10,7 +10,7 @@ COPY default.conf .
 COPY .env.production .
 
 RUN yarn install
-RUN npm run build
+RUN yarn build
 
 FROM nginx:1.15.7-alpine
 
