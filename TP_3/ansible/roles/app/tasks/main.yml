@@ -8,8 +8,8 @@
     restart_policy: on-failure
     restart_retries: 3
     networks:
-      - name: internal-network
-      - name: app-network
+      - name: backend-network
+      - name: proxy-network
     env:
       POSTGRES_HOST: "{{ backend_api_host }}"
       POSTGRES_PORT: "{{ backend_api_port | string }}"

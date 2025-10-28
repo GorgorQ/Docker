@@ -6,7 +6,7 @@
     state: started
     restart_policy: no
     networks:
-      - name: app-network
+      - name: proxy-network
     ports:
       - "80:80"
     env:

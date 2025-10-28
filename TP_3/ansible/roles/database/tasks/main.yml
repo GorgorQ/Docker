@@ -12,7 +12,8 @@
     recreate: yes
     restart_policy: unless-stopped
     networks:
-      - name: internal-network
+      - name: db-network
+      - name: backend-network
     env:
       POSTGRES_DB: "{{ vault_postgres_db }}"
       POSTGRES_USER: "{{ vault_postgres_user }}"
