@@ -14,6 +14,10 @@ RUN npm run build
 
 FROM nginx:1.15.7-alpine
 
+# Declare build args
+ARG BACKEND_API_HOST
+ARG BACKEND_API_PORT
+
 # Install envsubst for variable substitution
 RUN apk add --no-cache gettext
 
