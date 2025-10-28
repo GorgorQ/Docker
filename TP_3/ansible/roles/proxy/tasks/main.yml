@@ -1,4 +1,16 @@
 ---
+- name: Create frontend directory
+  file:
+    path: /opt/frontend
+    state: directory
+    mode: '0755'
+
+- name: Copy frontend built files
+  copy:
+    src: "{{ playbook_dir }}/../../front-end/dist/"
+    dest: /opt/frontend/
+    mode: '0644'
+
 - name: Run HTTPD reverse proxy
   community.docker.docker_container:
     name: httpd
@@ -9,6 +21,8 @@
       - name: proxy-network
     ports:
       - "80:80"
+    volumes:
+      - /opt/frontend:/usr/local/apache2/htdocs:ro
     env:
       BACKEND_API_HOST: "{{ backend_api_host }}"
       BACKEND_API_PORT: "{{ backend_api_port | string }}"
