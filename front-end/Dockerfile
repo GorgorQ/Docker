@@ -14,7 +14,13 @@ RUN npm run build
 
 FROM nginx:1.15.7-alpine
 
+# Install envsubst for variable substitution
+RUN apk add --no-cache gettext
+
+# Substitute env vars in config and copy
+COPY --from=build /opt/front/default.conf /tmp/default.conf
+RUN envsubst '$BACKEND_API_HOST $BACKEND_API_PORT' < /tmp/default.conf > /etc/nginx/conf.d/default.conf
+
 COPY --from=build /opt/front/dist /usr/share/nginx/html/
-COPY --from=build /opt/front/default.conf /etc/nginx/conf.d/default.conf
 
 EXPOSE 80

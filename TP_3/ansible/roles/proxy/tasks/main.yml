@@ -11,6 +11,9 @@
     name: "{{ httpd_image_name | default('gorgorq/my-httpd') }}"
     tag: "{{ httpd_image_tag | default('1.0') }}"
     source: build
+    buildargs:
+      BACKEND_API_HOST: "{{ backend_api_host | default('backend-api') }}"
+      BACKEND_API_PORT: "{{ backend_api_port | default('8080') }}"
 
 - name: Run HTTPD reverse proxy
   community.docker.docker_container:
