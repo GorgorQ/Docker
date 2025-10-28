@@ -18,6 +18,15 @@ jobs:
           chmod 400 ~/.ssh/id_rsa
           ssh-keyscan -H "${{ secrets.DEPLOY_HOST }}" >> ~/.ssh/known_hosts
 
+      - name: Debug DEPLOY_HOST present?
+        run: |
+          if [ -z "${{ secrets.DEPLOY_HOST }}" ]; then
+            echo "DEPLOY_HOST EMPTY" >&2
+            exit 1
+          else
+            echo "DEPLOY_HOST SET"
+          fi
+
       - name: Install Ansible
         run: |
           sudo apt-get update -y

@@ -15,3 +15,26 @@
     - database
     - app
     - proxy
+
+- name: Start ssh-agent and add key
+  uses: webfactory/ssh-agent@v0.8.1
+  with:
+    ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+
+- name: Check DEPLOY_HOST set and add known_hosts
+  run: |
+    if [ -z "${{ secrets.DEPLOY_HOST }}" ]; then
+      echo "ERROR: DEPLOY_HOST secret is empty" >&2
+      exit 1
+    fi
+    echo "Using DEPLOY_HOST: (hidden)"
+    # prefer pré‑rempli via secret KNOWN_HOSTS to éviter DNS public
+    if [ -n "${{ secrets.KNOWN_HOSTS }}" ]; then
+      mkdir -p ~/.ssh
+      echo "${{ secrets.KNOWN_HOSTS }}" > ~/.ssh/known_hosts
+      chmod 644 ~/.ssh/known_hosts
+    else
+      # tentative de résolution (debug) puis ssh-keyscan si possible
+      nslookup "${{ secrets.DEPLOY_HOST }}" || true
+      ssh-keyscan -H "${{ secrets.DEPLOY_HOST }}" >> ~/.ssh/known_hosts || true
+    fi
