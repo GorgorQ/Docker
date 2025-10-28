@@ -12,7 +12,7 @@
       - name: app-network
     env:
       POSTGRES_HOST: "{{ backend_api_host }}"
-      POSTGRES_PORT: "{{ backend_api_port }}"
+      POSTGRES_PORT: "{{ backend_api_port | string }}"
       POSTGRES_DB: "{{ postgres_db }}"
       POSTGRES_USER: "{{ postgres_user }}"
       POSTGRES_PASSWORD: "{{ postgres_password }}"
