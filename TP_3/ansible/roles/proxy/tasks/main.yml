@@ -7,7 +7,7 @@
 - name: Build frontend Docker image
   community.docker.docker_image:
     build:
-      path: ../../../front-end
+      path: ../../../../../../front-end
       args:
         BACKEND_API_HOST: "{{ backend_api_host | default('backend-api') }}"
         BACKEND_API_PORT: "{{ backend_api_port | default('8080') }}"
