@@ -40,6 +40,21 @@ jobs:
           echo "${{ secrets.ANSIBLE_VAULT_PASSWORD }}" > .vault_pass
           chmod 600 .vault_pass
 
+      - name: Start ssh-agent and add key
+        uses: webfactory/ssh-agent@v0.8.1
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+
+      - name: Add known_hosts (use KNOWN_HOSTS if provided, else ssh-keyscan IP)
+        run: |
+          mkdir -p ~/.ssh
+          if [ -n "${{ secrets.KNOWN_HOSTS }}" ]; then
+            echo "${{ secrets.KNOWN_HOSTS }}" > ~/.ssh/known_hosts
+          else
+            ssh-keyscan -H "${{ secrets.DEPLOY_HOST }}" >> ~/.ssh/known_hosts
+          fi
+          chmod 644 ~/.ssh/known_hosts
+
       - name: Run Ansible playbook
         run: |
           ansible-playbook -i ansible/inventories/setup.yml ansible/playbook.yml --vault-password-file .vault_pass -e "image_tag=${{ github.ref_name || 'latest' }}"
