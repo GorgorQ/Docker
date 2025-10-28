@@ -5,6 +5,7 @@
     image: "{{ image_name | default('gorgorq/simple-api') }}:{{ image_tag | default('1.0') }}"
     state: started
     recreate: yes
+    pull: always
     restart_policy: on-failure
     restart_retries: 3
     networks:
